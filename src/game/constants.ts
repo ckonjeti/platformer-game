@@ -40,7 +40,7 @@ export const LEDGE_POP_SPEED = -2.0; // hop when climbing past a ledge
 
 // --- Stamina ---
 export const MAX_STAMINA = 110;
-export const CLIMB_UP_COST = 100 / 60; // per frame while climbing up
+export const CLIMB_UP_COST = 45.45 / 60; // per frame while climbing up (~14 tiles on full stamina)
 export const STAMINA_HOLD_COST = 10 / 60; // per frame while hanging
 export const CLIMB_JUMP_COST = 27.5;
 export const LOW_STAMINA = 20; // flash warning threshold

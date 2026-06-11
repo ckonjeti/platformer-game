@@ -17,6 +17,8 @@ export class Input {
   /** Raw "down" state from all sources, sampled each frame. */
   private keyDown = new Set<Action>();
   private virtualDown = new Set<Action>();
+  /** Press edges queued between frames so even sub-frame taps register. */
+  private pressQueue = new Set<Action>();
   /** Joystick axis values in -1..1 (touch only). */
   virtualAxisX = 0;
   virtualAxisY = 0;
@@ -33,7 +35,10 @@ export class Input {
       const actions = KEY_MAP[e.code];
       if (!actions) return;
       e.preventDefault();
-      for (const a of actions) this.keyDown.add(a);
+      for (const a of actions) {
+        if (!e.repeat && !this.keyDown.has(a)) this.pressQueue.add(a);
+        this.keyDown.add(a);
+      }
       this.fireInteraction();
     });
     window.addEventListener('keyup', (e) => {
@@ -58,6 +63,7 @@ export class Input {
   /** Called by the touch controller. */
   setVirtual(action: Action, down: boolean): void {
     if (down) {
+      if (!this.virtualDown.has(action)) this.pressQueue.add(action);
       this.virtualDown.add(action);
       this.touchActive = true;
       this.fireInteraction();
@@ -65,6 +71,8 @@ export class Input {
       this.virtualDown.delete(action);
     }
   }
+
+  private pressed = new Set<Action>();
 
   /** Snapshot state for this frame; call once at the top of each update. */
   update(): void {
@@ -76,6 +84,10 @@ export class Input {
     if (this.virtualAxisX > t) this.held.add('right');
     if (this.virtualAxisY < -t) this.held.add('up');
     if (this.virtualAxisY > t) this.held.add('down');
+    // Edge set: queued press events plus anything newly held (joystick directions)
+    this.pressed = new Set(this.pressQueue);
+    for (const a of this.held) if (!this.prev.has(a)) this.pressed.add(a);
+    this.pressQueue.clear();
   }
 
   isHeld(a: Action): boolean {
@@ -83,7 +95,7 @@ export class Input {
   }
 
   isPressed(a: Action): boolean {
-    return this.held.has(a) && !this.prev.has(a);
+    return this.pressed.has(a);
   }
 
   get moveX(): -1 | 0 | 1 {
