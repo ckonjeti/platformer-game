@@ -8,7 +8,11 @@ import type { ChapterDef, ScreenDef } from './legend';
  * placed in the last screen so the loop is completable.
  * To restore the full game, export the chapters unmodified.
  */
-function previewSlice(ch: ChapterDef, count: number): ChapterDef {
+function previewSlice(
+  ch: ChapterDef,
+  count: number,
+  beacon: { row: number; col: number } = { row: 17, col: 36 },
+): ChapterDef {
   const screens = ch.screens.slice(0, count).map((s) => ({ ...s, exits: { ...s.exits } }));
   const ids = new Set(screens.map((s) => s.id));
   for (const s of screens) {
@@ -20,13 +24,14 @@ function previewSlice(ch: ChapterDef, count: number): ChapterDef {
   const last = screens[screens.length - 1]!;
   if (!last.grid.join('').includes('!')) {
     last.grid = [...last.grid];
-    const row = last.grid[17]!;
-    last.grid[17] = row.slice(0, 36) + '!' + row.slice(37);
+    const row = last.grid[beacon.row]!;
+    last.grid[beacon.row] = row.slice(0, beacon.col) + '!' + row.slice(beacon.col + 1);
   }
   return { ...ch, screens };
 }
 
-export const CHAPTERS: ChapterDef[] = [chapter1, previewSlice(chapter2, 2)];
+// The 2-2 beacon sits on the summit platform at the top-left of the climb.
+export const CHAPTERS: ChapterDef[] = [chapter1, previewSlice(chapter2, 2, { row: 3, col: 3 })];
 
 const screenIndex = new Map<string, ScreenDef>();
 for (const ch of CHAPTERS) {

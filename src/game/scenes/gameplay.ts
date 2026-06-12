@@ -290,13 +290,15 @@ export class GameplayScene implements Scene {
   private checkExits(): void {
     const exits = this.parsed.def.exits;
     const p = this.player;
+    // Vertical exits also require matching velocity, so an arrival placed at
+    // the seam edge can't instantly bounce back through the seam it came from.
     if (exits.right && p.x >= SCREEN_COLS * TILE - 4) {
       this.startTransition('right', exits.right);
     } else if (exits.left && p.x <= -4) {
       this.startTransition('left', exits.left);
-    } else if (exits.up && p.y + p.h <= 2) {
+    } else if (exits.up && p.y + p.h <= 2 && p.vy < 0) {
       this.startTransition('up', exits.up);
-    } else if (exits.down && p.y >= ROOM_H - 2) {
+    } else if (exits.down && p.y >= ROOM_H - 2 && p.vy > 0) {
       this.startTransition('down', exits.down);
     } else {
       // Clamp at closed side edges

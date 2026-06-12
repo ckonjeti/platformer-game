@@ -12,6 +12,12 @@ interface Button {
 /**
  * Touch controls: floating joystick on the left half, jump/dash/grab buttons
  * on the right, pause at the top-right. Drawn on the overlay canvas in CSS px.
+ *
+ * The three action buttons fan around the bottom-right corner where the right
+ * thumb rests: jump in the corner, dash one roll to the left, grab one roll
+ * up. Grab is a toggle — tap to latch on, tap to release (a long press still
+ * works as hold-to-grab) — so climbing never requires holding a button while
+ * also pressing jump.
  */
 export class TouchControls {
   private joyId: number | null = null;
@@ -21,6 +27,8 @@ export class TouchControls {
   private joyY = 0;
   private buttons: Button[] = [];
   private buttonPointers = new Map<number, Action>();
+  private grabLatched = false;
+  private grabDownTime = 0;
   private ctx: CanvasRenderingContext2D;
 
   constructor(
@@ -62,9 +70,9 @@ export class TouchControls {
     const bx = w - inset.right;
     const by = h - inset.bottom;
     this.buttons = [
-      { action: 'jump', label: 'A', cx: bx - r * 1.6, cy: by - r * 1.6, r },
-      { action: 'dash', label: 'B', cx: bx - r * 4.0, cy: by - r * 2.6, r },
-      { action: 'grab', label: 'G', cx: bx - r * 1.9, cy: by - r * 4.2, r: r * 0.85 },
+      { action: 'jump', label: 'A', cx: bx - r * 1.7, cy: by - r * 1.7, r: r * 1.15 },
+      { action: 'dash', label: 'B', cx: bx - r * 4.3, cy: by - r * 1.6, r },
+      { action: 'grab', label: 'G', cx: bx - r * 1.8, cy: by - r * 4.3, r },
       { action: 'pause', label: 'II', cx: bx - r, cy: inset.top + r, r: r * 0.6 },
     ];
   }
@@ -74,14 +82,23 @@ export class TouchControls {
     e.preventDefault();
     const x = e.clientX;
     const y = e.clientY;
-    // Buttons first (they may sit near the screen middle on small devices)
+    // Buttons first (they may sit near the screen middle on small devices).
+    // Hit zones are generous and can overlap, so pick the nearest center.
+    let hit: Button | null = null;
+    let hitD = Infinity;
     for (const b of this.buttons) {
+      const d = (x - b.cx) ** 2 + (y - b.cy) ** 2;
       const hitR = b.r * 1.35;
-      if ((x - b.cx) ** 2 + (y - b.cy) ** 2 <= hitR * hitR) {
-        this.buttonPointers.set(e.pointerId, b.action);
-        this.input.setVirtual(b.action, true);
-        return;
+      if (d <= hitR * hitR && d < hitD) {
+        hit = b;
+        hitD = d;
       }
+    }
+    if (hit) {
+      this.buttonPointers.set(e.pointerId, hit.action);
+      if (hit.action === 'grab') this.grabDownTime = performance.now();
+      this.input.setVirtual(hit.action, true);
+      return;
     }
     // Left half: floating joystick
     if (x < window.innerWidth / 2 && this.joyId === null) {
@@ -121,7 +138,14 @@ export class TouchControls {
     const action = this.buttonPointers.get(e.pointerId);
     if (action) {
       this.buttonPointers.delete(e.pointerId);
-      this.input.setVirtual(action, false);
+      if (action === 'grab') {
+        // Quick tap toggles the latch; a long press is hold-to-grab.
+        if (performance.now() - this.grabDownTime < 250) this.grabLatched = !this.grabLatched;
+        else this.grabLatched = false;
+        this.input.setVirtual('grab', this.grabLatched);
+      } else {
+        this.input.setVirtual(action, false);
+      }
     }
     if (e.pointerId === this.joyId) {
       this.joyId = null;
@@ -136,12 +160,23 @@ export class TouchControls {
     if (!this.input.touchActive) return;
 
     for (const b of this.buttons) {
-      const held = [...this.buttonPointers.values()].includes(b.action);
+      const held =
+        [...this.buttonPointers.values()].includes(b.action) ||
+        (b.action === 'grab' && this.grabLatched);
       ctx.globalAlpha = held ? 0.5 : 0.22;
       ctx.fillStyle = '#cdd6ea';
       ctx.beginPath();
       ctx.arc(b.cx, b.cy, b.r, 0, Math.PI * 2);
       ctx.fill();
+      if (b.action === 'grab' && this.grabLatched) {
+        // Latched grab gets a ring so it's obvious it will stick
+        ctx.globalAlpha = 0.85;
+        ctx.strokeStyle = '#cdd6ea';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.arc(b.cx, b.cy, b.r + 4, 0, Math.PI * 2);
+        ctx.stroke();
+      }
       ctx.globalAlpha = held ? 0.9 : 0.5;
       ctx.fillStyle = '#1a2030';
       ctx.font = `bold ${Math.round(b.r * 0.7)}px monospace`;

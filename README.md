@@ -10,6 +10,11 @@ All pixel art and audio are generated in code; there are no asset files.
 > **Preview build:** 12 screens are currently enabled for play-testing — all of
 > Chapter 1 (10 screens) plus the first 2 screens of Chapter 2. The remaining screens
 > are being added chapter by chapter; the slice is configured in `src/levels/index.ts`.
+>
+> The game is a **vertical ascent**: each screen is a multi-layered climb, and screens
+> stack on top of each other through chimney seams (exit through the top, arrive at the
+> bottom of the next). Falling down a chimney drops you back a screen — a setback, not
+> a death.
 
 ## Play in the browser (quickest way to test)
 
@@ -30,7 +35,10 @@ Open the printed URL (default `http://localhost:5173`). The game scales to any w
 | Pause | Esc or Enter |
 
 **Touch controls** (phone browser or the Android app): floating joystick on the left half
-of the screen; `A` = jump, `B` = dash, `G` = grab on the right; pause at the top-right.
+of the screen. The action buttons fan around the right thumb's resting corner: `A` = jump
+(bottom corner), `B` = dash (one roll left), `G` = grab (one roll up). **Grab is a toggle**
+— tap `G` once to latch on (a ring shows it's active), tap again to release; a long press
+still works as hold-to-grab. Pause at the top-right.
 
 ## Build the Android APK
 
