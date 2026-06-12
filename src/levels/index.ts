@@ -1,4 +1,5 @@
 import { chapter1 } from './chapter1';
+import { chapter2 } from './chapter2';
 import type { ChapterDef, ScreenDef } from './legend';
 
 /**
@@ -25,7 +26,7 @@ function previewSlice(ch: ChapterDef, count: number): ChapterDef {
   return { ...ch, screens };
 }
 
-export const CHAPTERS: ChapterDef[] = [previewSlice(chapter1, 2)];
+export const CHAPTERS: ChapterDef[] = [chapter1, previewSlice(chapter2, 2)];
 
 const screenIndex = new Map<string, ScreenDef>();
 for (const ch of CHAPTERS) {

@@ -330,6 +330,11 @@ export class GameplayScene implements Scene {
         p.x = keep.x;
         break;
     }
+    // Ground heights can differ across a seam: pop the player up out of
+    // any solid so a sideways entry never embeds them in the floor.
+    if (dir === 'right' || dir === 'left') {
+      for (let i = 0; i < 32 && p.world.solidAt(p); i++) p.y--;
+    }
     this.mode = 'transition';
     this.transitionDir = dir;
     this.transitionT = C.TRANSITION_TIME;

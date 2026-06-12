@@ -7,9 +7,9 @@ character — gradually fill with light as you ascend.
 Built with TypeScript + HTML5 Canvas, wrapped into a native Android app with Capacitor.
 All pixel art and audio are generated in code; there are no asset files.
 
-> **Preview build:** only the first 2 screens are currently enabled for play-testing.
-> The remaining screens are being added chapter by chapter. The slice is configured in
-> `src/levels/index.ts` (`previewSlice(chapter1, 2)`).
+> **Preview build:** 12 screens are currently enabled for play-testing — all of
+> Chapter 1 (10 screens) plus the first 2 screens of Chapter 2. The remaining screens
+> are being added chapter by chapter; the slice is configured in `src/levels/index.ts`.
 
 ## Play in the browser (quickest way to test)
 
