@@ -35,8 +35,9 @@ export class World {
   }
 
   tileAt(tx: number, ty: number): number {
-    if (tx < 0 || tx >= this.cols) return T_SOLID; // closed side walls
-    if (ty < 0 || ty >= this.rows) return T_EMPTY; // open top/bottom (exits/falls)
+    // All bounds are open: room exits live at the edges, and the gameplay
+    // scene clamps the player at edges that have no exit.
+    if (tx < 0 || tx >= this.cols || ty < 0 || ty >= this.rows) return T_EMPTY;
     return this.tiles[ty * this.cols + tx] ?? T_EMPTY;
   }
 
